@@ -256,6 +256,69 @@ ros2 launch gtsam_legged_replay_example sg_odom.launch.xml robot_type:=anymal
 ros2 launch gtsam_legged_replay_example sg_odom.launch.xml robot_type:=g1
 ```
 
+## Try It: Demo Bags
+
+Two ready-to-play ROS 2 bags (MCAP, zstd-compressed) are provided so you can
+run SG-ODOM without collecting your own data. Each one contains only the
+topics the estimator needs for that robot. Both are available in this
+[Google Drive folder](https://drive.google.com/drive/folders/1XiqZdiJb121IZ3AitXiL4m0ekJZGgcMz),
+or download them individually below.
+
+| Robot | Download | Size | Duration | Topics |
+|---|---|---|---|---|
+| ANYmal D | [sg_odom_anymal_demo.zip](https://drive.google.com/file/d/1PSziQv2mBJOji7fGTb_fBfEc03az6QwX/view?usp=sharing) | 35 MB | 100 s | `/anymal/imu`, `/anymal/state_estimator/anymal_state` |
+| Unitree G1 | [sg_odom_g1_demo.zip](https://drive.google.com/file/d/149AfJ_pDDzFnvA3P9gDHhxslGtOo14j6/view?usp=sharing) | 16 MB | 35 s | `/lowstate` |
+
+Download and unzip them into a `bags/` folder at the repository root (it is
+git-ignored). With Docker this folder shows up inside the container at
+`/ros2_ws/src/SG-ODOM/bags`:
+
+```bash
+mkdir -p bags && cd bags
+unzip sg_odom_anymal_demo.zip
+unzip sg_odom_g1_demo.zip
+cd ..
+```
+
+Start the container and build the workspace once (see
+[Build (Docker, recommended)](#build-docker-recommended)), then open two
+shells in it:
+
+```bash
+docker compose up -d
+docker compose exec gtsam_legged_estimator bash   # run once per terminal
+```
+
+**ANYmal D.** Terminal 1 starts the estimator, terminal 2 plays the bag:
+
+```bash
+# terminal 1
+source install/setup.bash
+ros2 launch gtsam_legged_replay_example sg_odom.launch.xml robot_type:=anymal
+
+# terminal 2
+source install/setup.bash
+ros2 bag play src/SG-ODOM/bags/sg_odom_anymal_demo
+```
+
+**Unitree G1.** Same steps, with the G1 config and bag:
+
+```bash
+# terminal 1
+source install/setup.bash
+ros2 launch gtsam_legged_replay_example sg_odom.launch.xml robot_type:=g1
+
+# terminal 2
+source install/setup.bash
+ros2 bag play src/SG-ODOM/bags/sg_odom_g1_demo
+```
+
+Start the estimator before starting playback. The estimate is published on
+`/legged_estimator/{odom,path,foot_contacts}`, and trajectories are written
+to `./outputs/live` (see [Output Topics](#output-topics)). Add
+`use_rviz:=true` to the launch command to open RViz; this needs a display
+that the container can reach.
+
 ## Input Topics
 
 Robot-specific defaults are defined in `sg_odom/config/spot_legged_estimator.yaml`,
